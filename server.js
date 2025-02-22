@@ -1,30 +1,46 @@
 const express = require("express");
-const http = require('http');
-const path = require('path');
-const app = express();
+const http = require("http");
+const path = require("path");
+const bodyParser = require("body-parser");
 const database = require("./database");
-database.createTable();
 
+const app = express();
+app.use(bodyParser.json());
 app.use("/", express.static(path.join(__dirname, "public")));
+
+database.createTables();
+
 app.post("/insert", async (req, res) => {
-  const accident = req.body.accident;
-  try {
-    await database.insert(accident);
-    res.json({result: "ok"});
-  } catch (e) {
-    res.status(500).json({result: "ko"});
-  }
-})
-app.get('/accidents', async (req, res) => {
-    const list = await database.select();
-    res.json(list);
+    const prenotazione = req.body;
+    try {
+        await database.insertPrenotazione(prenotazione);
+        res.json({ result: "ok" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
-app.delete('/delete/:id', async (req, res) => {
-  await database.delete(req.params.id);
-  res.json({result: "ok"});
-})
+
+app.get("/prenotazioni", async (req, res) => {
+    try {
+        const list = await database.getAllPrenotazione();
+        res.json(list);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get("/booking/:date", async (req, res) => {
+    const date = req.params.date;
+    try {
+        const list = await database.getPrenotazioneData(date);
+        res.json(list);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 const server = http.createServer(app);
 const port = 5600;
 server.listen(port, () => {
-  console.log("- server running on port: " + port);
+    console.log("- server running on port: " + port);
 });
