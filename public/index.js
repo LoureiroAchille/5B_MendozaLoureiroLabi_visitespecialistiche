@@ -36,3 +36,17 @@ const createMiddleware = () => {
     }
 }
 
+const controller = async (middleware) => {
+    
+    //render
+     
+       const inputFile = document.querySelector('#file');
+       const button = document.querySelector("#button");
+       handleSubmit = async (event) => {
+       await middleware.upload(inputFile);
+        middleware.load().then(render);
+      }
+      button.onclick = handleSubmit;
+    }
+    
+    controller(createMiddleware());
