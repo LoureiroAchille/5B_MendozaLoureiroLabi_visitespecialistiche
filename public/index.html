@@ -13,8 +13,8 @@
 <body>
     <div class="container mt-5" id="container">
         <!-- Lista Prenotazioni -->
-        <div class="flex-container" style="justify-content: end;">
-            <button type="button" class="btn btn-primary" style="display: none;" id="prenotazione">Prenota</button>
+        <div id="bottoni" class="flex-container" style="justify-content: end;">
+            <button type="button" class="btn btn-success" style="display: none;" id="prenotazione">Prenota</button>
             <button type="button" class="btn btn-primary"  id="login">Login</button>
         </div>
 
@@ -29,7 +29,7 @@
         <div id="booking-list"></div>
 
         <!-- Pagina Prenotazioni -->
-        <div id="prenotazioni">
+        <div id="prenotazioni" style="display: none">
             <h2>Prenota una visita</h2>
 
             <!-- Form Prenotazione -->
@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <div id="modale"></div>
+    <div id="loginContainer"></div>
 
     <div id="overlay"></div>
 
@@ -66,5 +66,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script type="module" src="index.js"></script>
     <script type="module" src="navigator.js"></script>
+    <script type="module" src="componenti.js"></script>
+    <script type="module" src="login.js"></script>
 </body>
 </html>
