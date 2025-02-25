@@ -15,7 +15,7 @@ export const createNavigator = (parentElement) => {
 
    const render = () => {
        const url = new URL(document.location.href);
-       const pageName = url.hash.replace("#", "") || "public-page"; 
+       const pageName = url.hash.replace("#", "") || "home"; 
 
        const selected = pages.find((page) => page.id === pageName) || pages[0];
 
@@ -33,6 +33,6 @@ export const createNavigator = (parentElement) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-   const parentElement = document.body;
+   const parentElement = document.querySelector("#container");
    createNavigator(parentElement);
 });
