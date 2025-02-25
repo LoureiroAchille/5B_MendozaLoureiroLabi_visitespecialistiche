@@ -86,3 +86,45 @@ export const createLogin = (elem) => {
 }
 
 
+export function createForm() {
+    const formContainer = document.getElementById('form');
+    const addButton = document.getElementById('prenotazione');
+  
+    addButton.onclick = () => {
+      formContainer.style.display = "block";
+      document.getElementById("overlay").style.display = "block";
+      formContainer.innerHTML = `
+        <form id="addPrenotazione">
+            <div class="mb-3">
+                <label for="date" class="form-label">Data</label>
+                <input type="date" id="date" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label for="hour" class="form-label">Ora</label>
+                <input type="number" id="hour" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Nome</label>
+                <input type="text" id="name" class="form-control" required />
+            </div>
+            <button type="button" id="button" class="btn btn-primary">Prenota</button>
+        </form>
+    `;
+  
+    // annulla
+    document.getElementById('cancelAdd').onclick = () => {
+        formContainer.innerHTML = '';
+        formContainer.style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+    };
+  
+    const date = document.getElementById('date').value;
+    const hour = document.getElementById('hour').value;
+    const name = document.getElementById('name').value;
+    };
+};
+  
+  // Inizializza il form
+  createForm();
+  
+  
