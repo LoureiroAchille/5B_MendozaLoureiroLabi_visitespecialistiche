@@ -108,6 +108,7 @@ export function createForm() {
                 <input type="text" id="name" class="form-control" required />
             </div>
             <button type="button" id="button" class="btn btn-primary">Prenota</button>
+            <button type="button" id="cancelAdd" class="btn btn-secondary" style="margin-left: 10px;">Annulla</button> 
         </form>
     `;
   
@@ -118,13 +119,110 @@ export function createForm() {
         document.getElementById("overlay").style.display = "none";
     };
   
-    const date = document.getElementById('date').value;
-    const hour = document.getElementById('hour').value;
-    const name = document.getElementById('name').value;
+     // aggiungi prenotazione
+     document.getElementById('button').onclick = () => {
+        const date = document.getElementById('date').value;
+        const hour = document.getElementById('hour').value;
+        const name = document.getElementById('name').value;
+        const type = document.getElementById('type').value; // Tipologia selezionata
+
+        const selectedTypeId = getTypeId(type); // Funzione per ottenere l'ID della tipologia
+
+        fetch('/insert', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                date: date,
+                hour: hour,
+                name: name,
+                idType: selectedTypeId // ID della tipologia
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === "ok") {
+                alert("Prenotazione aggiunta con successo!");
+                loadBookings(); // Carica le prenotazioni aggiornate
+            }
+        });
     };
+    };
+    
 };
+
+export const loadBookings = () => {
+    fetch('/prenotazioni')
+        .then((response) => response.json())
+        .then((bookings) => {
+            const tableContainer = document.getElementById('table-container');
+            let tableHTML = `<table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Data</th>
+                                        <th>Ora</th>
+                                        <th>Nome</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+            bookings.forEach(booking => {
+                tableHTML += `<tr>
+                                <td>${booking.type}</td>
+                                <td>${booking.date}</td>
+                                <td>${booking.hour}</td>
+                                <td>${booking.name}</td>
+                            </tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+            tableContainer.innerHTML = tableHTML;
+        });
+};
+
+// Funzione per ottenere l'ID della tipologia
+function getTypeId(type) {
+    const typeIds = {
+        cardiology: 1,
+        psychology: 2,
+        oncology: 3,
+        orthopedics: 4,
+        neurology: 5
+    };
+    return typeIds[type] || null; // Restituisce l'ID corrispondente alla tipologia
+}
+
+
+export function renderTipologie() {
+    const tipologieVisita = ["Cardiologia", "Psicologia", "Oncologia", "Ortopedia", "Neurologia"];
+    let html = '<div class="tipologie-container mb-4">';
+    tipologieVisita.forEach((tipologia, index) => {
+        let buttonClass = index === 0 ? 'btn-primary' : 'btn-secondary'; // La prima è la selezionata
+        html += `<button 
+                    class="btn ${buttonClass} mx-1" 
+                    onclick="selectTipologia(${index})">
+                    ${tipologia}
+                </button>`;
+    });
+    html += '</div>';
+
+    // Aggiungi le tipologie direttamente dentro il div 'home'
+    document.getElementById('container').innerHTML += html;  
+}
+function selectTipologia(index) {
+  tipologiaSelez = index;
+  showPrenotazione();
+}
+function showPrenotazione() {
+    document.getElementById('prenotazione').style.display = "inline-block"; // Mostra il pulsante
+}
+
+
+
+// Inizializza il form
+createForm();
+
+// Carica le prenotazioni
+loadBookings();
   
-  // Inizializza il form
-  createForm();
-  
-  
+renderTipologie();
