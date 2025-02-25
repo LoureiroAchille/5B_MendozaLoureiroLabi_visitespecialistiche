@@ -12,26 +12,24 @@
 
 <body>
     <div class="container mt-5" id="container">
-        <!-- Sezione di Navigazione -->
-        <nav class="mb-4">
-            <ul class="nav nav-tabs">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#home">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#prenotazioni">Prenotazioni</a>
-                </li>
-            </ul>
-        </nav>
+        <!-- Lista Prenotazioni -->
+        <div class="flex-container" style="justify-content: end;">
+            <button type="button" class="btn btn-primary" style="display: none;" id="prenotazione">Prenota</button>
+            <button type="button" class="btn btn-primary"  id="login">Login</button>
+        </div>
 
         <!-- Pagina Home -->
-        <div id="home" class="page visible">
+        <div id="home">
             <h2>Benvenuto alla Clinica CUROBENE</h2>
             <p>Gestisci le prenotazioni delle visite specialistiche in modo semplice ed efficiente.</p>
         </div>
 
+        
+        <h3>Prenotazioni Registrate</h3>
+        <div id="booking-list"></div>
+
         <!-- Pagina Prenotazioni -->
-        <div id="prenotazioni" class="page hidden">
+        <div id="prenotazioni">
             <h2>Prenota una visita</h2>
 
             <!-- Form Prenotazione -->
@@ -55,11 +53,15 @@
                 <button type="button" id="button" class="btn btn-primary">Prenota</button>
             </form>
 
-            <!-- Lista Prenotazioni -->
-            <h3>Prenotazioni Registrate</h3>
-            <div id="booking-list"></div>
+            
         </div>
     </div>
+
+    <div id="modale"></div>
+
+    <div id="overlay"></div>
+
+    <div id="form"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script type="module" src="index.js"></script>
