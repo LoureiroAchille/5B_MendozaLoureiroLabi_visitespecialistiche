@@ -77,7 +77,11 @@ const database = {
             WHERE b.date = ?
         `;
         return executeQuery(sql, [date]);
-    }
+    },
+    getAllTipologie() {
+        const sql = `SELECT id, name FROM type`;
+        return executeQuery(sql);
+      }
 };
 
 module.exports = database;

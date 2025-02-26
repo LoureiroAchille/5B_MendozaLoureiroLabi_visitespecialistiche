@@ -1,3 +1,14 @@
+import {login_fetch,getTypeId,selectTipologia} from "./function.js"
+
+let currentWeekOffset = 0;
+let tipologiaSelez = 0;
+let giorniSettimana = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+let tipologieVisita = {}; // Definiamo l'oggetto per le tipologie di visita
+let diz = {}; // Dizionario delle disponibilità
+window.selectTipologia = selectTipologia;
+
+const tableContainer = document.getElementById("tableContainer");
+
 export const createLogin = (elem) => {
     let data;
     let element = elem;
@@ -56,37 +67,7 @@ export const createLogin = (elem) => {
     };
   };
 
-  export function login_fetch(username, password) {
-    return new Promise((resolve, reject) => {
-        fetch("./conf.json")
-            .then(r => r.json())
-            .then(confData => {
-                if (!confData.token) {
-                    console.error("Token non trovato in ./conf.json");
-                    return;
-                }
-
-                
-                return fetch("http://ws.cipiaceinfo.it/credential/login", { 
-                    method: "POST",
-                    headers: {
-                        "content-type": "application/json",
-                        "key": confData.token 
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
-            })
-            .then(r => r.json())
-            .then(r => resolve(r.result)) 
-            .catch(reject); 
-    });
-}
-
-
-export function createForm() {
+export function createForm() {  
     const formContainer = document.getElementById('form');
     const addButton = document.getElementById('prenotazione');
   
@@ -94,23 +75,34 @@ export function createForm() {
       formContainer.style.display = "block";
       document.getElementById("overlay").style.display = "block";
       formContainer.innerHTML = `
-        <form id="addPrenotazione">
-            <div class="mb-3">
-                <label for="date" class="form-label">Data</label>
-                <input type="date" id="date" class="form-control" required />
-            </div>
-            <div class="mb-3">
-                <label for="hour" class="form-label">Ora</label>
-                <input type="number" id="hour" class="form-control" required />
-            </div>
-            <div class="mb-3">
-                <label for="name" class="form-label">Nome</label>
-                <input type="text" id="name" class="form-control" required />
-            </div>
-            <button type="button" id="button" class="btn btn-primary">Prenota</button>
-            <button type="button" id="cancelAdd" class="btn btn-secondary" style="margin-left: 10px;">Annulla</button> 
-        </form>
-    `;
+    <form id="addPrenotazione">
+        <div class="mb-3">
+            <label for="date" class="form-label">Data</label>
+            <input type="date" id="date" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label for="hour" class="form-label">Ora</label>
+            <input type="number" id="hour" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">Nome</label>
+            <input type="text" id="name" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label for="type" class="form-label">Tipologia</label>
+            <select id="type" class="form-control">
+                <option value="cardiology">Cardiologia</option>
+                <option value="psychology">Psicologia</option>
+                <option value="oncology">Oncologia</option>
+                <option value="orthopedics">Ortopedia</option>
+                <option value="neurology">Neurologia</option>
+            </select>
+        </div>
+        <button type="button" id="button" class="btn btn-primary">Prenota</button>
+        <button type="button" id="cancelAdd" class="btn btn-secondary" style="margin-left: 10px;">Annulla</button> 
+    </form>
+`;
+
   
     // annulla
     document.getElementById('cancelAdd').onclick = () => {
@@ -144,7 +136,7 @@ export function createForm() {
         .then(data => {
             if (data.result === "ok") {
                 alert("Prenotazione aggiunta con successo!");
-                loadBookings(); // Carica le prenotazioni aggiornate
+                //loadBookings(); // Carica le prenotazioni aggiornate
             }
         });
     };
@@ -152,77 +144,118 @@ export function createForm() {
     
 };
 
-export const loadBookings = () => {
-    fetch('/prenotazioni')
-        .then((response) => response.json())
-        .then((bookings) => {
-            const tableContainer = document.getElementById('table-container');
-            let tableHTML = `<table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo</th>
-                                        <th>Data</th>
-                                        <th>Ora</th>
-                                        <th>Nome</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-            bookings.forEach(booking => {
-                tableHTML += `<tr>
-                                <td>${booking.type}</td>
-                                <td>${booking.date}</td>
-                                <td>${booking.hour}</td>
-                                <td>${booking.name}</td>
-                            </tr>`;
-            });
-            tableHTML += `</tbody></table>`;
-            tableContainer.innerHTML = tableHTML;
+
+
+
+export function renderNavbarTipologie() {
+    fetch('/tipologie')
+        .then(response => response.json())
+        .then(tipologie => {
+            if (Array.isArray(tipologie)) {
+                const navbar = document.getElementById('navbarTipologie');
+                if (!navbar) return;
+
+                tipologieVisita = {};
+                tipologie.forEach(tipologia => {
+                    tipologieVisita[tipologia.id] = tipologia.name;
+                });
+
+                let html = `
+                    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                        <div class="container-fluid">
+                            <a class="navbar-brand" href="#">Tipologie</a>
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarNav">
+                                <ul class="navbar-nav">
+                `;
+                
+                tipologie.forEach(tipologia => {
+                    html += `
+                        <li class="nav-item">
+                            <button class="btn btn-outline-primary" onclick="selectTipologia(${tipologia.id})">
+                                ${tipologia.name}
+                            </button>
+                        </li>
+                    `;
+                });
+
+                html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                `;
+
+                navbar.innerHTML = html;
+            } else {
+                console.error("I dati ricevuti non sono un array:", tipologie);
+            }
+        })
+        .catch(error => {
+            console.error("Errore nel caricamento delle tipologie:", error);
         });
-};
+}
 
-// Funzione per ottenere l'ID della tipologia
-function getTypeId(type) {
-    const typeIds = {
-        cardiology: 1,
-        psychology: 2,
-        oncology: 3,
-        orthopedics: 4,
-        neurology: 5
+export function TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana }) {
+    let currentWeekOffset = 0;
+
+    const aggiornaTabella = () => {
+        const tableContainer = document.getElementById("tableContainer");
+        if (!tableContainer) return;
+
+        let formattedDate = [];
+        let dayCounter = 0;
+
+        for (let i = 0; dayCounter < 5; i++) {
+            const futureDate = moment().add(i + currentWeekOffset * 7, 'days');
+            const dayIndex = futureDate.day();
+
+            if (dayIndex !== 0 && dayIndex !== 6) {
+                formattedDate.push({
+                    date: futureDate.format('YYYY-MM-DD'),
+                    day: giorniSettimana[dayIndex],
+                });
+                dayCounter++;
+            }
+        }
+
+        let html = '<div class="mb-2">';
+        html += '<button id="precBtn" class="btn btn-outline-success">Settimana Precedente</button>';
+        html += '<button id="succBtn" class="btn btn-outline-success">Settimana Successiva</button>';
+        html += '</div>';
+        html += '<table class="table table-bordered table-striped"><thead><tr><th>Ora</th>';
+
+        formattedDate.forEach(({ day, date }) => {
+            html += `<th>${day} - ${date}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        [8, 9, 10, 11, 12].forEach((ora) => {
+            html += `<tr><td>${ora}</td>`;
+            formattedDate.forEach(({ date }) => {
+                const key = `${tipologieVisita || ""}-${date}-${ora}`;
+                const disponibilita = diz[key] || 'Disponibile';
+                html += `<td class="${disponibilita !== "Disponibile" ? "table-info" : ""}">${disponibilita}</td>`;
+            });
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        tableContainer.innerHTML = html;
+
+        document.getElementById('precBtn').onclick = () => { currentWeekOffset--; aggiornaTabella(); };
+        document.getElementById('succBtn').onclick = () => { currentWeekOffset++; aggiornaTabella(); };
     };
-    return typeIds[type] || null; // Restituisce l'ID corrispondente alla tipologia
+
+    aggiornaTabella();
 }
 
-
-export function renderTipologie() {
-    const tipologieVisita = ["Cardiologia", "Psicologia", "Oncologia", "Ortopedia", "Neurologia"];
-    let html = '<div class="tipologie-container mb-4">';
-    tipologieVisita.forEach((tipologia, index) => {
-        let buttonClass = index === 0 ? 'btn-primary' : 'btn-secondary'; // La prima è la selezionata
-        html += `<button 
-                    class="btn ${buttonClass} mx-1" 
-                    onclick="selectTipologia(${index})">
-                    ${tipologia}
-                </button>`;
-    });
-    html += '</div>';
-
-    // Aggiungi le tipologie direttamente dentro il div 'home'
-    document.getElementById('container').innerHTML += html;  
-}
-function selectTipologia(index) {
-  tipologiaSelez = index;
-  showPrenotazione();
-}
-function showPrenotazione() {
-    document.getElementById('prenotazione').style.display = "inline-block"; // Mostra il pulsante
-}
-
-
-
+  
 // Inizializza il form
 createForm();
 
-// Carica le prenotazioni
-loadBookings();
-  
-renderTipologie();
+// Richiama la funzione per caricare la navbar
+renderNavbarTipologie();
+TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana });

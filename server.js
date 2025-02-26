@@ -38,6 +38,17 @@ app.get("/booking/:date", async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+app.get('/tipologie', async (req, res) => {
+    try {
+      // Non usi più "connection.execute", ma la tua funzione:
+      const rows = await database.getAllTipologie();
+      res.json(rows);
+    } catch (error) {
+      console.error("Errore nel recupero delle tipologie:", error);
+      res.status(500).json({ error: "Errore nel recupero delle tipologie" });
+    }
+  });
+  
 
 const server = http.createServer(app);
 const port = 5600;
