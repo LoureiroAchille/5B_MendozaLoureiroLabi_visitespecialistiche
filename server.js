@@ -12,17 +12,21 @@ database.createTables();
 
 app.post("/insert", async (req, res) => {
     const prenotazione = req.body;
+    console.log("Dati ricevuti:", prenotazione); // Aggiungi questo per vedere cosa arriva
     try {
         await database.insertPrenotazione(prenotazione);
         res.json({ result: "ok" });
     } catch (e) {
+        console.error("Errore durante l'inserimento:", e);
         res.status(500).json({ error: e.message });
     }
 });
 
+
 app.get("/prenotazioni", async (req, res) => {
     try {
         const list = await database.getAllPrenotazione();
+        console.log("Dati ricevuti:", list);
         res.json(list);
     } catch (e) {
         res.status(500).json({ error: e.message });

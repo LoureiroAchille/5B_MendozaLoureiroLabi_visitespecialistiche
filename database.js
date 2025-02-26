@@ -46,26 +46,24 @@ const database = {
     },
 
     insertPrenotazione: (booking) => {
-        const idType = booking.idType;
-        const date = booking.date;
-        const hour = booking.hour;
-        const name = booking.name;
-    
+        const { idType, date, hour, name } = booking;
+        
         const sql = `
             INSERT INTO booking (idType, date, hour, name) 
-            VALUES (${idType}, '${date}', ${hour}, '${name}')
+            VALUES (?, ?, ?, ?)
         `;
-    
-        return executeQuery(sql);
+        
+        return executeQuery(sql, [idType, date, hour, name]);
     },
+    
     
 
     getAllPrenotazione: () => {
         const sql = `
-            SELECT b.id, t.name AS type, b.date, b.hour, b.name
-            FROM booking AS b
-            JOIN type AS t ON b.idType = t.id
-        `;
+        SELECT b.id, t.name AS type, DATE_FORMAT(b.date, '%Y-%m-%d') AS date, b.hour, b.name
+        FROM booking AS b
+        JOIN type AS t ON b.idType = t.id
+    `;
         return executeQuery(sql);
     },
 

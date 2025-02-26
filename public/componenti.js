@@ -1,10 +1,10 @@
-import {login_fetch,getTypeId,selectTipologia} from "./function.js"
+import {login_fetch,getTypeId,loadBookings} from "./function.js"
 
 let currentWeekOffset = 0;
-let tipologiaSelez = 0;
+export let tipologiaSelez = 0;
 let giorniSettimana = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-let tipologieVisita = {}; // Definiamo l'oggetto per le tipologie di visita
-let diz = {}; // Dizionario delle disponibilità
+let tipologieVisita = {}; 
+let diz = {}; 
 window.selectTipologia = selectTipologia;
 
 const tableContainer = document.getElementById("tableContainer");
@@ -67,95 +67,127 @@ export const createLogin = (elem) => {
     };
   };
 
-export function createForm() {  
+  export function createForm() {
     const formContainer = document.getElementById('form');
     const addButton = document.getElementById('prenotazione');
-  
+
     addButton.onclick = () => {
-      formContainer.style.display = "block";
-      document.getElementById("overlay").style.display = "block";
-      formContainer.innerHTML = `
-    <form id="addPrenotazione">
-        <div class="mb-3">
-            <label for="date" class="form-label">Data</label>
-            <input type="date" id="date" class="form-control" required />
-        </div>
-        <div class="mb-3">
-            <label for="hour" class="form-label">Ora</label>
-            <input type="number" id="hour" class="form-control" required />
-        </div>
-        <div class="mb-3">
-            <label for="name" class="form-label">Nome</label>
-            <input type="text" id="name" class="form-control" required />
-        </div>
-        <div class="mb-3">
-            <label for="type" class="form-label">Tipologia</label>
-            <select id="type" class="form-control">
-                <option value="cardiology">Cardiologia</option>
-                <option value="psychology">Psicologia</option>
-                <option value="oncology">Oncologia</option>
-                <option value="orthopedics">Ortopedia</option>
-                <option value="neurology">Neurologia</option>
-            </select>
-        </div>
-        <button type="button" id="button" class="btn btn-primary">Prenota</button>
-        <button type="button" id="cancelAdd" class="btn btn-secondary" style="margin-left: 10px;">Annulla</button> 
-    </form>
-`;
+        formContainer.style.display = "block";
+        document.getElementById("overlay").style.display = "block";
+        formContainer.innerHTML = `
+            <form id="addPrenotazione">
+                <div class="mb-3">
+                    <label for="date" class="form-label">Data</label>
+                    <input type="date" id="date" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label for="hour" class="form-label">Ora</label>
+                    <input type="number" id="hour" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nome</label>
+                    <input type="text" id="name" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label for="type" class="form-label">Tipologia</label>
+                    <select id="type" class="form-control">
+                        <option value="cardiology">Cardiologia</option>
+                        <option value="psychology">Psicologia</option>
+                        <option value="oncology">Oncologia</option>
+                        <option value="orthopedics">Ortopedia</option>
+                        <option value="neurology">Neurologia</option>
+                    </select>
+                </div>
+                <button type="submit" id="button" class="btn btn-primary">Prenota</button>
+                <button type="button" id="cancelAdd" class="btn btn-secondary" style="margin-left: 10px;">Annulla</button>
+            </form>
+        `;
 
-  
-    // annulla
-    document.getElementById('cancelAdd').onclick = () => {
-        formContainer.innerHTML = '';
-        formContainer.style.display = "none";
-        document.getElementById("overlay").style.display = "none";
-    };
-  
-     // aggiungi prenotazione
-     document.getElementById('button').onclick = () => {
-        const date = document.getElementById('date').value;
-        const hour = document.getElementById('hour').value;
-        const name = document.getElementById('name').value;
-        const type = document.getElementById('type').value; // Tipologia selezionata
+        // Annulla
+        document.getElementById('cancelAdd').onclick = () => {
+            formContainer.innerHTML = '';
+            formContainer.style.display = "none";
+            document.getElementById("overlay").style.display = "none";
+        };
 
-        const selectedTypeId = getTypeId(type); // Funzione per ottenere l'ID della tipologia
+        // Aggiungi prenotazione
+        document.getElementById('addPrenotazione').onsubmit = (event) => {
+            event.preventDefault(); // Previene il comportamento di default
 
-        fetch('/insert', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                date: date,
-                hour: hour,
-                name: name,
-                idType: selectedTypeId // ID della tipologia
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.result === "ok") {
-                alert("Prenotazione aggiunta con successo!");
-                //loadBookings(); // Carica le prenotazioni aggiornate
+            console.log("Form submitted, collecting data...");
+            const date = document.getElementById('date').value;
+            const hour = document.getElementById('hour').value;
+            const name = document.getElementById('name').value;
+            const type = document.getElementById('type').value;
+
+            // Log per verificare che i dati siano corretti
+            console.log("Date:", date);
+            console.log("Hour:", hour);
+            console.log("Name:", name);
+            console.log("Type:", type);
+
+            // Validazione dei dati
+            if (!date || !hour || !name) {
+                alert("Tutti i campi sono obbligatori.");
+                return; // Interrompe il submit se i campi non sono validi
             }
-        });
+
+            // Esegui la chiamata al server in modo asincrono
+            fetch('/insert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    date: date,
+                    hour: hour,
+                    name: name,
+                    idType: getTypeId(type),
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response data:", data);
+
+                if (data.result === "ok") {
+                    alert("Prenotazione aggiunta con successo!");
+                    TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez }); // Carica le prenotazioni aggiornate
+                    formContainer.innerHTML = ''; // Reset del form
+                    formContainer.style.display = "none"; // Nascondi il form
+                    document.getElementById("overlay").style.display = "none"; // Nascondi l'overlay
+                } else {
+                    alert("Errore durante l'inserimento della prenotazione.");
+                }
+            })
+            .catch(error => {
+                console.error("Errore nella richiesta:", error);
+                alert("Errore durante la prenotazione.");
+            });
+        };
     };
-    };
-    
 };
 
 
+
+
+
+export function selectTipologia(tipologiaId) {
+    tipologiaSelez = tipologiaId;
+    currentWeekOffset = 0;
+    TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez });
+}
 
 
 export function renderNavbarTipologie() {
     fetch('/tipologie')
         .then(response => response.json())
         .then(tipologie => {
+            console.log("TipologieVisita:", tipologieVisita);
             if (Array.isArray(tipologie)) {
                 const navbar = document.getElementById('navbarTipologie');
                 if (!navbar) return;
 
-                tipologieVisita = {};
+                const tipologieVisita = {};
                 tipologie.forEach(tipologia => {
                     tipologieVisita[tipologia.id] = tipologia.name;
                 });
@@ -170,7 +202,7 @@ export function renderNavbarTipologie() {
                             <div class="collapse navbar-collapse" id="navbarNav">
                                 <ul class="navbar-nav">
                 `;
-                
+
                 tipologie.forEach(tipologia => {
                     html += `
                         <li class="nav-item">
@@ -189,6 +221,12 @@ export function renderNavbarTipologie() {
                 `;
 
                 navbar.innerHTML = html;
+                if (tipologiaSelez !== 0) {
+                        const selectedButton = document.getElementById(`tipologia-${tipologiaSelez}`);
+                        if (selectedButton) {
+                            selectedButton.classList.add('selected');
+                        }
+                }
             } else {
                 console.error("I dati ricevuti non sono un array:", tipologie);
             }
@@ -198,7 +236,8 @@ export function renderNavbarTipologie() {
         });
 }
 
-export function TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana }) {
+
+export function TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez }) {
     let currentWeekOffset = 0;
 
     const aggiornaTabella = () => {
@@ -208,11 +247,15 @@ export function TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana }) {
         let formattedDate = [];
         let dayCounter = 0;
 
+        // Usa moment per partire dal primo giorno della settimana (lunedì)
+        const startOfWeek = moment().startOf('week').add(currentWeekOffset, 'weeks');
+
+        // Costruisce la lista delle date per i giorni lavorativi (lunedì-venerdì)
         for (let i = 0; dayCounter < 5; i++) {
-            const futureDate = moment().add(i + currentWeekOffset * 7, 'days');
+            const futureDate = startOfWeek.clone().add(i, 'days');
             const dayIndex = futureDate.day();
 
-            if (dayIndex !== 0 && dayIndex !== 6) {
+            if (dayIndex !== 0 && dayIndex !== 6) { // Escludi domenica (0) e sabato (6)
                 formattedDate.push({
                     date: futureDate.format('YYYY-MM-DD'),
                     day: giorniSettimana[dayIndex],
@@ -221,36 +264,69 @@ export function TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana }) {
             }
         }
 
-        let html = '<div class="mb-2">';
-        html += '<button id="precBtn" class="btn btn-outline-success">Settimana Precedente</button>';
-        html += '<button id="succBtn" class="btn btn-outline-success">Settimana Successiva</button>';
-        html += '</div>';
-        html += '<table class="table table-bordered table-striped"><thead><tr><th>Ora</th>';
+        // Fetch per ottenere le prenotazioni
+        fetch('/prenotazioni')
+            .then(response => response.json())
+            .then(data => {
+                
+                console.log("Prenotazioni ricevute:", data);
 
-        formattedDate.forEach(({ day, date }) => {
-            html += `<th>${day} - ${date}</th>`;
-        });
-        html += '</tr></thead><tbody>';
 
-        [8, 9, 10, 11, 12].forEach((ora) => {
-            html += `<tr><td>${ora}</td>`;
-            formattedDate.forEach(({ date }) => {
-                const key = `${tipologieVisita || ""}-${date}-${ora}`;
-                const disponibilita = diz[key] || 'Disponibile';
-                html += `<td class="${disponibilita !== "Disponibile" ? "table-info" : ""}">${disponibilita}</td>`;
+                let html = '<div class="mb-2">';
+                html += '<button id="precBtn" class="btn btn-outline-success">Settimana Precedente</button>';
+                html += '<button id="succBtn" class="btn btn-outline-success">Settimana Successiva</button>';
+                html += '</div>';
+                html += '<table class="table table-bordered table-striped"><thead><tr><th>Ora</th>';
+
+                formattedDate.forEach(({ day, date }) => {
+                    html += `<th>${day} - ${date}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                // Ora della prenotazione (es. 8, 9, 10, 11, 12)
+                [8, 9, 10, 11, 12].forEach((ora) => {
+                    html += `<tr><td>${ora}</td>`;
+                    formattedDate.forEach(({ date }) => {
+                        const key = `${tipologiaSelez}-${date}-${ora}`;
+                        let disponibilita = diz[key] || 'Disponibile';
+                        
+                        const tipologiaVisitaStr = tipologieVisita[tipologiaSelez] || "";
+                        console.log("Tipologia selezionata:", tipologiaVisitaStr);
+
+                        const prenotazioni = data.filter(pr => pr.date === date && pr.hour === ora && pr.type === tipologiaVisitaStr);
+                        if (prenotazioni.length > 0) {
+                            disponibilita = prenotazioni.map(pr => pr.name).join(', ');
+                        }
+
+                        html += `<td class="${disponibilita !== "Disponibile" ? "table-info" : ""}">${disponibilita}</td>`;
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                tableContainer.innerHTML = html;
+
+                // Event listener per i pulsanti
+                document.getElementById('precBtn').onclick = () => { 
+                    currentWeekOffset--; 
+                    aggiornaTabella(); 
+                };
+                document.getElementById('succBtn').onclick = () => { 
+                    currentWeekOffset++; 
+                    aggiornaTabella(); 
+                };
+            })
+            .catch(error => {
+                console.error("Errore nel caricamento delle prenotazioni:", error);
             });
-            html += '</tr>';
-        });
-
-        html += '</tbody></table>';
-        tableContainer.innerHTML = html;
-
-        document.getElementById('precBtn').onclick = () => { currentWeekOffset--; aggiornaTabella(); };
-        document.getElementById('succBtn').onclick = () => { currentWeekOffset++; aggiornaTabella(); };
     };
 
-    aggiornaTabella();
+    aggiornaTabella(); 
 }
+
+
+
+
 
   
 // Inizializza il form
@@ -258,4 +334,12 @@ createForm();
 
 // Richiama la funzione per caricare la navbar
 renderNavbarTipologie();
+
+//loadBookings();
+
+
+console.log("Dizionario delle prenotazioni:", diz);
 TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana });
+console.log("Tipologia selezionata:", tipologiaSelez);
+
+
