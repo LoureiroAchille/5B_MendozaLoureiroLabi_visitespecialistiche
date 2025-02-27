@@ -1,4 +1,4 @@
-import {login_fetch,getTypeId,loadBookings} from "./function.js"
+import {login_fetch,getTypeId} from "./function.js"
 
 let currentWeekOffset = 0;
 export let tipologiaSelez = 0;
