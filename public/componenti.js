@@ -164,9 +164,6 @@ export const createLogin = (elem) => {
 };
 
 
-
-
-
 export function selectTipologia(tipologiaId) {
     let div = document.getElementById("gruppo bottoni");
     let elementi = div.querySelectorAll("*");
@@ -179,7 +176,6 @@ export function selectTipologia(tipologiaId) {
     document.getElementById(tipologiaId).classList.add("btn-primary");
     TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez });
 }
-
 
 
 export function renderNavbarTipologie() {
@@ -312,7 +308,6 @@ export function TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tip
 }
 
 
-
 function fetchPrenotazioni(callback) {
     fetch('/prenotazioni')
         .then(response => response.json())
@@ -329,17 +324,9 @@ fetchPrenotazioni((prenotazioni) => {
 });
 
 
-
-
-
-
 createForm();
 
 renderNavbarTipologie();
 
 
-
 TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana });
-
-
-
