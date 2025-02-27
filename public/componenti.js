@@ -168,8 +168,15 @@ export const createLogin = (elem) => {
 
 
 export function selectTipologia(tipologiaId) {
+    let div = document.getElementById("gruppo bottoni");
+    let elementi = div.querySelectorAll("*");
+    elementi.forEach(el => {
+        el.classList.replace("btn-primary", "btn-outline-primary");
+    });
     tipologiaSelez = tipologiaId;
     currentWeekOffset = 0;
+    document.getElementById(tipologiaId).classList.remove("btn-outline-primary");
+    document.getElementById(tipologiaId).classList.add("btn-primary");
     TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez });
 }
 
@@ -191,26 +198,22 @@ export function renderNavbarTipologie() {
                 let html = `
                     <nav class="navbar navbar-expand-lg navbar-light bg-light">
                         <div class="container-fluid">
-                            <a class="navbar-brand" href="#">Tipologie</a>
                             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                                 <span class="navbar-toggler-icon"></span>
                             </button>
-                            <div class="collapse navbar-collapse" id="navbarNav">
-                                <ul class="navbar-nav">
+                            <span style="margin-right: 20px;">Tipologie</span>
+                            <div id="gruppo bottoni" class="btn-group" role="group" aria-label="Basic outlined example">
                 `;
 
                 tipologie.forEach(tipologia => {
                     html += `
-                        <li class="nav-item">
-                            <button class="btn btn-outline-primary" onclick="selectTipologia(${tipologia.id})">
+                            <button id="${tipologia.id}" class="btn btn-outline-primary" onclick="selectTipologia(${tipologia.id})">
                                 ${tipologia.name}
                             </button>
-                        </li>
                     `;
                 });
 
-                html += `
-                                </ul>
+                html += ` 
                             </div>
                         </div>
                     </nav>
