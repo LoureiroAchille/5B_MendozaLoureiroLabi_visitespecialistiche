@@ -7,8 +7,6 @@ let tipologieVisita = {};
 let diz = {}; 
 window.selectTipologia = selectTipologia;
 
-const tableContainer = document.getElementById("tableContainer");
-
 export const createLogin = (elem) => {
     let data;
     let element = elem;
@@ -103,16 +101,16 @@ export const createLogin = (elem) => {
             </form>
         `;
 
-        // Annulla
+        //annula bottone
         document.getElementById('cancelAdd').onclick = () => {
             formContainer.innerHTML = '';
             formContainer.style.display = "none";
             document.getElementById("overlay").style.display = "none";
         };
 
-        // Aggiungi prenotazione
+        //prenotazione 
         document.getElementById('addPrenotazione').onsubmit = (event) => {
-            event.preventDefault(); // Previene il comportamento di default
+            event.preventDefault(); //cosi che non ricarichi la pagina
 
             console.log("Form submitted, collecting data...");
             const date = document.getElementById('date').value;
@@ -120,19 +118,17 @@ export const createLogin = (elem) => {
             const name = document.getElementById('name').value;
             const type = document.getElementById('type').value;
 
-            // Log per verificare che i dati siano corretti
+            //debug
             console.log("Date:", date);
             console.log("Hour:", hour);
             console.log("Name:", name);
             console.log("Type:", type);
 
-            // Validazione dei dati
             if (!date || !hour || !name) {
                 alert("Tutti i campi sono obbligatori.");
-                return; // Interrompe il submit se i campi non sono validi
+                return;
             }
-
-            // Esegui la chiamata al server in modo asincrono
+            //insert
             fetch('/insert', {
                 method: 'POST',
                 headers: {
@@ -150,11 +146,11 @@ export const createLogin = (elem) => {
                 console.log("Response data:", data);
 
                 if (data.result === "ok") {
-                    alert("Prenotazione aggiunta con successo!");
-                    TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez }); // Carica le prenotazioni aggiornate
-                    formContainer.innerHTML = ''; // Reset del form
-                    formContainer.style.display = "none"; // Nascondi il form
-                    document.getElementById("overlay").style.display = "none"; // Nascondi l'overlay
+                    alert("Prenotazione aggiunta con successo!");   
+                    TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez }); // carica i dati sulla tabella
+                    formContainer.innerHTML = '';
+                    formContainer.style.display = "none"; 
+                    document.getElementById("overlay").style.display = "none"; 
                 } else {
                     alert("Errore durante l'inserimento della prenotazione.");
                 }
@@ -178,16 +174,16 @@ export function selectTipologia(tipologiaId) {
 }
 
 
+
 export function renderNavbarTipologie() {
     fetch('/tipologie')
         .then(response => response.json())
         .then(tipologie => {
-            console.log("TipologieVisita:", tipologieVisita);
             if (Array.isArray(tipologie)) {
                 const navbar = document.getElementById('navbarTipologie');
                 if (!navbar) return;
 
-                const tipologieVisita = {};
+                tipologieVisita = {};
                 tipologie.forEach(tipologia => {
                     tipologieVisita[tipologia.id] = tipologia.name;
                 });
@@ -238,108 +234,109 @@ export function renderNavbarTipologie() {
 
 
 export function TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez }) {
-    let currentWeekOffset = 0;
-
     const aggiornaTabella = () => {
-        const tableContainer = document.getElementById("tableContainer");
-        if (!tableContainer) return;
+        fetchPrenotazioni((prenotazioni) => {
+            const tableContainer = document.getElementById("tableContainer");
+            if (!tableContainer) return;
 
-        let formattedDate = [];
-        let dayCounter = 0;
+            let formattedDate = [];
+            let dayCounter = 0;
 
-        // Usa moment per partire dal primo giorno della settimana (lunedì)
-        const startOfWeek = moment().startOf('week').add(currentWeekOffset, 'weeks');
+            const startOfWeek = moment().startOf('week').add(currentWeekOffset, 'weeks');
 
-        // Costruisce la lista delle date per i giorni lavorativi (lunedì-venerdì)
-        for (let i = 0; dayCounter < 5; i++) {
-            const futureDate = startOfWeek.clone().add(i, 'days');
-            const dayIndex = futureDate.day();
+            for (let i = 0; dayCounter < 5; i++) {
+                const futureDate = startOfWeek.clone().add(i, 'days');
+                const dayIndex = futureDate.day();
 
-            if (dayIndex !== 0 && dayIndex !== 6) { // Escludi domenica (0) e sabato (6)
-                formattedDate.push({
-                    date: futureDate.format('YYYY-MM-DD'),
-                    day: giorniSettimana[dayIndex],
-                });
-                dayCounter++;
-            }
-        }
-
-        // Fetch per ottenere le prenotazioni
-        fetch('/prenotazioni')
-            .then(response => response.json())
-            .then(data => {
-                
-                console.log("Prenotazioni ricevute:", data);
-
-
-                let html = '<div class="mb-2">';
-                html += '<button id="precBtn" class="btn btn-outline-success">Settimana Precedente</button>';
-                html += '<button id="succBtn" class="btn btn-outline-success">Settimana Successiva</button>';
-                html += '</div>';
-                html += '<table class="table table-bordered table-striped"><thead><tr><th>Ora</th>';
-
-                formattedDate.forEach(({ day, date }) => {
-                    html += `<th>${day} - ${date}</th>`;
-                });
-                html += '</tr></thead><tbody>';
-
-                // Ora della prenotazione (es. 8, 9, 10, 11, 12)
-                [8, 9, 10, 11, 12].forEach((ora) => {
-                    html += `<tr><td>${ora}</td>`;
-                    formattedDate.forEach(({ date }) => {
-                        const key = `${tipologiaSelez}-${date}-${ora}`;
-                        let disponibilita = diz[key] || 'Disponibile';
-                        
-                        const tipologiaVisitaStr = tipologieVisita[tipologiaSelez] || "";
-                        console.log("Tipologia selezionata:", tipologiaVisitaStr);
-
-                        const prenotazioni = data.filter(pr => pr.date === date && pr.hour === ora && pr.type === tipologiaVisitaStr);
-                        if (prenotazioni.length > 0) {
-                            disponibilita = prenotazioni.map(pr => pr.name).join(', ');
-                        }
-
-                        html += `<td class="${disponibilita !== "Disponibile" ? "table-info" : ""}">${disponibilita}</td>`;
+                if (dayIndex !== 0 && dayIndex !== 6) { 
+                    formattedDate.push({
+                        date: futureDate.format('YYYY-MM-DD'),
+                        day: giorniSettimana[dayIndex],
                     });
-                    html += '</tr>';
-                });
+                    dayCounter++;
+                }
+            }
 
-                html += '</tbody></table>';
-                tableContainer.innerHTML = html;
-
-                // Event listener per i pulsanti
-                document.getElementById('precBtn').onclick = () => { 
-                    currentWeekOffset--; 
-                    aggiornaTabella(); 
-                };
-                document.getElementById('succBtn').onclick = () => { 
-                    currentWeekOffset++; 
-                    aggiornaTabella(); 
-                };
-            })
-            .catch(error => {
-                console.error("Errore nel caricamento delle prenotazioni:", error);
+            let html = '<div class="mb-2">';
+            html += '<button id="precBtn" class="btn btn-outline-success">Settimana Precedente</button>';
+            html += '<button id="succBtn" class="btn btn-outline-success">Settimana Successiva</button>';
+            html += '</div>';
+            
+            html += '<table class="table table-bordered table-striped"><thead><tr><th>Ora</th>';
+            formattedDate.forEach(({ day, date }) => {
+                html += `<th>${day} - ${date}</th>`;
             });
+            html += '</tr></thead><tbody>';
+            const ore = [8, 9, 10, 11, 12];
+            ore.forEach((ora) => {
+                html += `<tr><td>${ora}</td>`;
+                formattedDate.forEach(({ date }) => {
+                    const key = `${tipologiaSelez}-${date}-${ora}`;  //chiave per il diz
+                    let disponibilita = diz[key] || 'Disponibile';
+                    
+                    const tipologiaVisitaStr = tipologieVisita[tipologiaSelez];
+                    const prenotazioniFiltrate = prenotazioni.filter(pr => 
+                        pr.date === date && 
+                        pr.hour === ora && 
+                        pr.type === tipologiaVisitaStr
+                    );
+
+                    if (prenotazioniFiltrate.length > 0) {
+                        disponibilita = prenotazioniFiltrate.map(pr => pr.name).join(', ');
+                    }
+
+                    html += `<td class="${disponibilita !== "Disponibile" ? "table-info" : ""}">${disponibilita}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            
+            tableContainer.innerHTML = html;
+
+            document.getElementById('precBtn').onclick = () => { 
+                currentWeekOffset--; 
+                aggiornaTabella(); 
+            };
+            document.getElementById('succBtn').onclick = () => { 
+                currentWeekOffset++; 
+                aggiornaTabella(); 
+            };
+        });
     };
 
-    aggiornaTabella(); 
+    aggiornaTabella();
 }
 
 
 
+function fetchPrenotazioni(callback) {
+    fetch('/prenotazioni')
+        .then(response => response.json())
+        .then(data => {
+            console.log("Prenotazioni ricevute:", data);
+            callback(data);
+        })
+        .catch(error => {
+            console.error("Errore nel caricamento delle prenotazioni:", error);
+        });
+}
+fetchPrenotazioni((prenotazioni) => {
+    TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana, tipologiaSelez });
+});
 
 
-  
-// Inizializza il form
+
+
+
+
 createForm();
 
-// Richiama la funzione per caricare la navbar
 renderNavbarTipologie();
 
-//loadBookings();
 
 
-console.log("Dizionario delle prenotazioni:", diz);
 TabellaPrenotazioni({ tipologieVisita, diz, giorniSettimana });
-console.log("Tipologia selezionata:", tipologiaSelez);
+
 
 
